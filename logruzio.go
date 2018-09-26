@@ -3,6 +3,7 @@ package logruzio
 import (
 	"io"
 	"net"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -11,6 +12,10 @@ const (
 	endpoint = "listener.logz.io:5050"
 	proto    = "tcp"
 )
+
+// ConnectionTimeout can be set if you want to set at timeout for
+// how long you want to try to connect to the logz.io endpoint
+var ConnectionTimeout time.Duration
 
 // HookOpts represents Logrus Logzio hook options
 type HookOpts struct {
@@ -37,6 +42,17 @@ type Hook struct {
 //		Formatter: myFormatter{}
 // }
 func New(token string, appName string, ctx logrus.Fields) (*Hook, error) {
+	return newHook(token, appName, ctx, 0)
+}
+
+// NewWithTimeout does the same as New but takes a timeout
+//
+// The timeout is used with net.DialTimeout so that you get more control of connection issues
+func NewWithTimeout(token string, appName string, ctx logrus.Fields, timeout time.Duration) (*Hook, error) {
+	return newHook(token, appName, ctx, timeout)
+}
+
+func newHook(token, appName string, ctx logrus.Fields, timeout time.Duration) (*Hook, error) {
 	opts := HookOpts{Context: logrus.Fields{}}
 
 	opts.Context["token"] = token
@@ -46,7 +62,7 @@ func New(token string, appName string, ctx logrus.Fields) (*Hook, error) {
 
 	var conn io.Writer
 	var err error
-	conn, err = net.Dial(proto, endpoint)
+	conn, err = net.DialTimeout(proto, endpoint, timeout)
 	if err != nil {
 		return nil, err
 	}
