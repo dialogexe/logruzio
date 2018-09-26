@@ -13,10 +13,6 @@ const (
 	proto    = "tcp"
 )
 
-// ConnectionTimeout can be set if you want to set at timeout for
-// how long you want to try to connect to the logz.io endpoint
-var ConnectionTimeout time.Duration
-
 // HookOpts represents Logrus Logzio hook options
 type HookOpts struct {
 	Conn      io.Writer
